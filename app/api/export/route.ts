@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+import { Role } from "@prisma/client"
 import ExcelJS from "exceljs"
 import fs from "fs"
 import path from "path"
@@ -32,10 +33,11 @@ export async function GET() {
 
     members.forEach((member, index) => {
       // Map roles
-      let roleDisplay = member.role
-      if (member.role === 'CHIEF_COORDINATOR') roleDisplay = 'Chief Coordinator'
-      else if (member.role === 'COORDINATOR') roleDisplay = 'Coordinator'
-      else if (member.role === 'VOLUNTEER') roleDisplay = 'Volunteer'
+      const roleDisplay: Record<Role, string> = {
+        [Role.CHIEF_COORDINATOR]: 'Chief Coordinator',
+        [Role.COORDINATOR]: 'Coordinator',
+        [Role.VOLUNTEER]: 'Volunteer',
+      }
 
       // Map branches
       let branchDisplay = member.branch
@@ -48,7 +50,7 @@ export async function GET() {
       const row = worksheet.addRow({
         sl: index + 1,
         branch: branchDisplay,
-        role: roleDisplay,
+        role: roleDisplay[member.role],
         name: member.fullName,
         phone: member.phone || "",
         photos: "" // We will inject the image here

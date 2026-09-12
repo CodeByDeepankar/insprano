@@ -94,7 +94,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
                   This ID is not registered, has been deactivated, or belongs to a suspended user.
                 </p>
                 <p className="text-xs text-red-400 font-mono mt-4">
-                  ID: {params.memberId}
+                  ID: {resolvedParams.memberId}
                 </p>
               </div>
               <Link 

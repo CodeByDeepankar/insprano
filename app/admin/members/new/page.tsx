@@ -21,7 +21,16 @@ export default function AddMemberPage() {
   // New state to hold member for hidden rendering
   const [createdMemberToCapture, setCreatedMemberToCapture] = useState<any>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    fullName: string
+    role: Role
+    branch: string
+    year: string
+    email: string
+    phone: string
+    bio: string
+    profileImage: string
+  }>({
     fullName: "",
     role: Role.COORDINATOR,
     branch: "",

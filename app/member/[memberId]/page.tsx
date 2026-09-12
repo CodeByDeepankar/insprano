@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Github, Instagram, Linkedin, Mail, CheckCircle, AlertTriangle } from "lucide-react"
+import { CheckCircle, AlertTriangle } from "lucide-react"
 
 export default async function MemberProfilePage({ params }: { params: Promise<{ memberId: string }> }) {
   const resolvedParams = await params
