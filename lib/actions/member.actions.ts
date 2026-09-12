@@ -3,6 +3,7 @@
 import prisma from "../prisma"
 import { Role, Status } from "@prisma/client"
 import { revalidatePath } from "next/cache"
+import { removeStoredFiles, uploadDataUrl } from "../storage"
 
 export async function generateUniqueId(role: Role): Promise<string> {
   const prefixMap = {
@@ -54,9 +55,6 @@ export async function generateSlug(fullName: string): Promise<string> {
   return slug
 }
 
-import fs from "fs"
-import path from "path"
-
 export type MemberInput = {
   fullName: string
   role: Role
@@ -74,29 +72,23 @@ export async function createMember(data: MemberInput) {
     const memberId = await generateUniqueId(data.role)
     const slug = await generateSlug(data.fullName)
 
-    const { idCardBase64, ...memberData } = data
+    const { idCardBase64, profileImage, ...memberData } = data
+    const profileImageUrl = profileImage
+      ? await uploadDataUrl(profileImage, `${memberId}/profile.webp`)
+      : undefined
 
     const member = await prisma.member.create({
       data: {
         ...memberData,
+        profileImage: profileImageUrl,
         memberId,
         slug,
         status: Status.ACTIVE,
       }
     })
 
-    // If we received an ID card base64 string, save it to the public folder
     if (idCardBase64) {
-      const base64Data = idCardBase64.replace(/^data:image\/png;base64,/, "")
-      const filePath = path.join(process.cwd(), "public", "generated-ids", `${memberId}.png`)
-      
-      // Ensure directory exists
-      const dirPath = path.dirname(filePath)
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true })
-      }
-      
-      fs.writeFileSync(filePath, base64Data, "base64")
+      await uploadDataUrl(idCardBase64, `${memberId}/id-card.png`)
     }
 
     revalidatePath("/admin")
@@ -111,22 +103,20 @@ export async function createMember(data: MemberInput) {
 
 export async function updateMember(memberId: string, data: Partial<MemberInput>) {
   try {
-    const { idCardBase64, ...memberData } = data
+    const { idCardBase64, profileImage, ...memberData } = data
+    const profileImageUrl = profileImage
+      ? await uploadDataUrl(profileImage, `${memberId}/profile.webp`)
+      : profileImage === ""
+        ? null
+        : undefined
 
     const member = await prisma.member.update({
       where: { memberId },
-      data: memberData
+      data: { ...memberData, profileImage: profileImageUrl }
     })
 
     if (idCardBase64) {
-      const base64Data = idCardBase64.replace(/^data:image\/png;base64,/, "")
-      const filePath = path.join(process.cwd(), "public", "generated-ids", `${memberId}.png`)
-      
-      const dirPath = path.dirname(filePath)
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true })
-      }
-      fs.writeFileSync(filePath, base64Data, "base64")
+      await uploadDataUrl(idCardBase64, `${memberId}/id-card.png`)
     }
 
     revalidatePath("/admin")
@@ -146,11 +136,10 @@ export async function deleteMember(memberId: string) {
       where: { memberId }
     })
 
-    // Optionally delete the generated ID card
-    const filePath = path.join(process.cwd(), "public", "generated-ids", `${memberId}.png`)
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
-    }
+    await removeStoredFiles([
+      `${memberId}/profile.webp`,
+      `${memberId}/id-card.png`,
+    ])
 
     revalidatePath("/admin")
     revalidatePath("/admin/members")

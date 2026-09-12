@@ -2,8 +2,7 @@ import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { Role } from "@prisma/client"
 import ExcelJS from "exceljs"
-import fs from "fs"
-import path from "path"
+import { getStoredFileUrl } from "@/lib/storage"
 
 export async function GET() {
   try {
@@ -31,7 +30,7 @@ export async function GET() {
     worksheet.getRow(1).font = { bold: true }
     worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
 
-    members.forEach((member, index) => {
+    for (const [index, member] of members.entries()) {
       // Map roles
       const roleDisplay: Record<Role, string> = {
         [Role.CHIEF_COORDINATOR]: 'Chief Coordinator',
@@ -58,20 +57,19 @@ export async function GET() {
 
       row.height = 120 // Set row height to fit the ID card image
 
-      // Check if auto-generated ID card PNG exists
-      const idCardPath = path.join(process.cwd(), "public", "generated-ids", `${member.memberId}.png`)
-      if (fs.existsSync(idCardPath)) {
+      const idCardResponse = await fetch(getStoredFileUrl(`${member.memberId}/id-card.png`))
+      if (idCardResponse.ok) {
         const imageId = workbook.addImage({
-          filename: idCardPath,
+          base64: `data:image/png;base64,${Buffer.from(await idCardResponse.arrayBuffer()).toString('base64')}`,
           extension: 'png',
         })
 
         worksheet.addImage(imageId, {
-          tl: { col: 5, row: index + 1 }, // col 5 is the 'Photos' column, row is index+1 (0-based for data after header)
-          ext: { width: 150, height: 238 } // Roughly ID card proportions
+          tl: { col: 5, row: index + 1 },
+          ext: { width: 150, height: 238 }
         })
       }
-    })
+    }
 
     worksheet.eachRow((row) => {
       row.alignment = { vertical: 'middle', horizontal: 'center' }
