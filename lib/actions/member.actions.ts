@@ -67,6 +67,10 @@ export type MemberInput = {
   idCardBase64?: string
 }
 
+function emptyToNull(value?: string) {
+  return value?.trim() ? value.trim() : null
+}
+
 export async function createMember(data: MemberInput) {
   try {
     const memberId = await generateUniqueId(data.role)
@@ -80,6 +84,10 @@ export async function createMember(data: MemberInput) {
     const member = await prisma.member.create({
       data: {
         ...memberData,
+        year: emptyToNull(memberData.year),
+        email: emptyToNull(memberData.email),
+        phone: emptyToNull(memberData.phone),
+        bio: emptyToNull(memberData.bio),
         profileImage: profileImageUrl,
         memberId,
         slug,
@@ -112,7 +120,14 @@ export async function updateMember(memberId: string, data: Partial<MemberInput>)
 
     const member = await prisma.member.update({
       where: { memberId },
-      data: { ...memberData, profileImage: profileImageUrl }
+      data: {
+        ...memberData,
+        year: memberData.year === undefined ? undefined : emptyToNull(memberData.year),
+        email: memberData.email === undefined ? undefined : emptyToNull(memberData.email),
+        phone: memberData.phone === undefined ? undefined : emptyToNull(memberData.phone),
+        bio: memberData.bio === undefined ? undefined : emptyToNull(memberData.bio),
+        profileImage: profileImageUrl,
+      }
     })
 
     if (idCardBase64) {
