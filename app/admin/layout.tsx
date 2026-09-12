@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import Link from "next/link"
-import { LayoutDashboard, Users, UserPlus, FileEdit, QrCode, CreditCard, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Users, UserPlus, CreditCard, Settings, LogOut } from "lucide-react"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -43,14 +43,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/id-cards" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-900 transition-colors">
             <CreditCard className="w-5 h-5 text-gray-400" />
             <span>ID Cards</span>
-          </Link>
-          <Link href="/admin/qr-codes" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-900 transition-colors">
-            <QrCode className="w-5 h-5 text-gray-400" />
-            <span>QR Codes</span>
-          </Link>
-          <Link href="/admin/works" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-900 transition-colors">
-            <FileEdit className="w-5 h-5 text-gray-400" />
-            <span>Works & Events</span>
           </Link>
         </nav>
         
