@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CHIEF_COORDINATOR
+  COORDINATOR
+  VOLUNTEER
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id           String   @id @default(uuid())
+  memberId     String   @unique // e.g., INS26-CC-001
+  fullName     String
+  slug         String   @unique // e.g., deepankar-kumar
+  role         Role
+  profileImage String?
+  branch       String
+  year         String?
+  email        String?  @unique
+  phone        String?
+  bio          String?
+  status       Status   @default(ACTIVE)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  works              Work[]
+  responsibilities   Responsibility[]
+  achievements       Achievement[]
+  socialLinks        SocialLink[]
+  eventContributions EventContribution[]
+  idCards            IDCard[]
+}
+
+model Work {
+  id          String   @id @default(uuid())
+  memberId    String
+  title       String
+  description String?
+  category    String?
+  image       String?
+  eventName   String?
+  date        String?
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Responsibility {
+  id          String   @id @default(uuid())
+  memberId    String
+  title       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  memberId    String
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model SocialLink {
+  id        String   @id @default(uuid())
+  memberId  String
+  platform  String   // e.g., Instagram, LinkedIn, GitHub
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model EventContribution {
+  id        String   @id @default(uuid())
+  memberId  String
+  eventName String
+  role      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model IDCard {
+  id          String   @id @default(uuid())
+  memberId    String
+  qrCodeUrl   String?
+  cardUrl     String?  // If we save the generated card image
+  generatedAt DateTime @default(now())
+
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   String?
+  adminId   String?
+  createdAt DateTime @default(now())
+}
