@@ -2,15 +2,23 @@ import { createClient } from "@supabase/supabase-js"
 
 const bucketName = process.env.SUPABASE_STORAGE_BUCKET || "member-assets"
 
-function getStorageClient() {
-  const supabaseUrl = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
+function getSupabaseUrl() {
+  const configuredUrl = process.env.SUPABASE_URL
+  if (!configuredUrl) {
+    throw new Error("Missing SUPABASE_URL")
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return configuredUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "")
+}
+
+function getStorageClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!serviceRoleKey) {
+    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY")
+  }
+
+  return createClient(getSupabaseUrl(), serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 }
@@ -35,12 +43,7 @@ export async function uploadDataUrl(dataUrl: string, filePath: string) {
 }
 
 export function getStoredFileUrl(filePath: string) {
-  const supabaseUrl = process.env.SUPABASE_URL
-  if (!supabaseUrl) {
-    throw new Error("Missing SUPABASE_URL")
-  }
-
-  return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filePath}`
+  return `${getSupabaseUrl()}/storage/v1/object/public/${bucketName}/${filePath}`
 }
 
 export async function removeStoredFiles(filePaths: string[]) {

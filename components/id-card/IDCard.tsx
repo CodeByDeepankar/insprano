@@ -38,6 +38,7 @@ export function IDCard({ member }: IDCardProps) {
     VOLUNTEER: '/volunteer.png',
   }
   const isVolunteer = member.role === 'VOLUNTEER'
+  const canShowProfileImage = member.role === 'CHIEF_COORDINATOR' || member.role === 'COORDINATOR'
   const bgImage = backgroundImages[member.role] || '/id-bg-chief.png'
 
   return (
@@ -51,8 +52,19 @@ export function IDCard({ member }: IDCardProps) {
         className="absolute inset-0 w-full h-full object-fill z-0"
       />
 
+      {canShowProfileImage && member.profileImage && (
+        <div className="absolute inset-0 z-10 flex justify-center pointer-events-none pt-[290px]">
+          <img
+            src={member.profileImage}
+            alt={member.fullName}
+            crossOrigin="anonymous"
+            className="w-[250px] h-[250px] rounded-full object-cover object-top border-4 border-[#B1122B]"
+          />
+        </div>
+      )}
+
       {/* Text and QR Layer */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center pointer-events-none">
+      <div className="absolute inset-0 z-20 flex flex-col items-center pointer-events-none">
         
         {/* Name */}
         <div className={`absolute ${isVolunteer ? 'top-[520px]' : 'top-[590px]'} w-full text-center px-4 flex justify-center`}>
